@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>バーコードスキャンテスト</title>
+  <title>バーコードスキャン保存</title>
   <style>
     body {
       font-family: sans-serif;
@@ -16,43 +16,40 @@
     }
     #result {
       margin-top: 1em;
-      font-size: 1.2em;
+      font-size: 1.3em;
       color: green;
     }
     button {
-      font-size: 1em;
-      padding: 0.5em 1em;
-      margin-top: 1em;
+      font-size: 1.4em;
+      padding: 0.7em 1.5em;
+      margin: 1em;
     }
   </style>
-  <!-- html5-qrcode ライブラリの読み込み -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
-  <h2>バーコードスキャンテスト</h2>
+  <h2>バーコードスキャン & 保存</h2>
   <div id="reader"></div>
-  <div id="result">スキャン結果がここに表示されます</div>
-  <button onclick="startScanner()">スキャン開始</button>
-  <button onclick="stopScanner()">スキャン停止</button>
+  <div id="result">読み取り結果がここに表示されます</div>
+  <button onclick="startScanner()">📷 スキャン開始</button>
+  <button onclick="stopScanner()">🛑 スキャン停止</button>
 
   <script>
     let html5QrCode;
     const resultElement = document.getElementById("result");
+    const scriptUrl = "https://script.google.com/macros/s/あなたのデプロイURL/exec"; // ←ここにGoogle Apps ScriptのURLを挿入
 
     function startScanner() {
       html5QrCode = new Html5Qrcode("reader");
       html5QrCode.start(
-        { facingMode: "environment" }, // 背面カメラ
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 }
-        },
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
         (decodedText) => {
           resultElement.textContent = `読み取り成功: ${decodedText}`;
-          html5QrCode.stop(); // 一度読み取ったら停止
+          sendToSheet(decodedText);
+          html5QrCode.stop();
         },
         (errorMessage) => {
-          // 読み取り失敗時のログ（必要なら表示）
           console.log("読み取り失敗:", errorMessage);
         }
       ).catch((err) => {
@@ -68,6 +65,21 @@
           resultElement.textContent = `停止エラー: ${err}`;
         });
       }
+    }
+
+    function sendToSheet(barcode) {
+      fetch(scriptUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `barcode=${encodeURIComponent(barcode)}`
+      })
+      .then(response => response.text())
+      .then(text => {
+        console.log("送信完了:", text);
+      })
+      .catch(err => {
+        console.error("送信エラー:", err);
+      });
     }
   </script>
 </body>
