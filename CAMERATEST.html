@@ -1,12 +1,74 @@
 <!CAMERATEST html>
-<html>
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>カメラテスト</title>
+  <title>バーコードスキャンテスト</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2em;
+    }
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+    }
+    #result {
+      margin-top: 1em;
+      font-size: 1.2em;
+      color: green;
+    }
+    button {
+      font-size: 1em;
+      padding: 0.5em 1em;
+      margin-top: 1em;
+    }
+  </style>
+  <!-- html5-qrcode ライブラリの読み込み -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
-  <h2>カメラアクセステスト</h2>
-  <input type="file" accept="image/*" capture="environment">
-  <p>このボタンを押して、カメラが起動するか確認してください。</p>
+  <h2>バーコードスキャンテスト</h2>
+  <div id="reader"></div>
+  <div id="result">スキャン結果がここに表示されます</div>
+  <button onclick="startScanner()">スキャン開始</button>
+  <button onclick="stopScanner()">スキャン停止</button>
+
+  <script>
+    let html5QrCode;
+    const resultElement = document.getElementById("result");
+
+    function startScanner() {
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" }, // 背面カメラ
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        (decodedText) => {
+          resultElement.textContent = `読み取り成功: ${decodedText}`;
+          html5QrCode.stop(); // 一度読み取ったら停止
+        },
+        (errorMessage) => {
+          // 読み取り失敗時のログ（必要なら表示）
+          console.log("読み取り失敗:", errorMessage);
+        }
+      ).catch((err) => {
+        resultElement.textContent = `エラー: ${err}`;
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          resultElement.textContent = "スキャン停止しました";
+        }).catch((err) => {
+          resultElement.textContent = `停止エラー: ${err}`;
+        });
+      }
+    }
+  </script>
 </body>
 </html>
